@@ -6,6 +6,10 @@ const teamSchema = new mongoose.Schema({
     ref: 'User', // Assuming you have a User schema
     // required: true
   },
+  leaderEmail: {
+    type: String,
+    required: true, // adjust the required constraint as needed
+  },
   teamName: {
     type: String,
     required: true
