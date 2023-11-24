@@ -19,7 +19,14 @@ password:{
     required:false,
     unique:false,
 },
+isLoggedIn:{
+    type:String,
+    required:false,
+    enum:["Yes","No"],
+    default:"No", 
+}
 });
+
 
 userSchema.plugin(findOrCreate);
 const User=mongoose.model("User",userSchema);
