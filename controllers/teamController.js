@@ -2,6 +2,7 @@
 
 const User = require('../models/userModel.js');
 const Team = require('../models/teamModel.js');
+const sendEmail = require("../utils/email.js");
 
 
 
@@ -15,7 +16,7 @@ function generateTeamCode() {
   }
 
 const createTeamController = async (req, res) => {
-    const { leaderId, teamName, domains } = req.body;
+    const { leaderId,leaderEmail, teamName, domains } = req.body;
 
   try {
     // Validate that the leader exists
@@ -30,12 +31,13 @@ const createTeamController = async (req, res) => {
     // Create a new team with the generated code
     const newTeam = new Team({
     //   leader: leader._id,
+      leaderEmail:leaderEmail,
       teamName: teamName,
       domains: domains,
       teamCode: teamCode,
     });
 
-    // Save the new team
+   
     const savedTeam = await newTeam.save();
 
     res.json({ success: true, team: savedTeam });
@@ -69,8 +71,66 @@ const getTeamsController = async (req, res) => {
   };
   
   
+
+const sendTeamcodeController = async (req, res) => {
+    try {
+      const { teamId,domainName } = req.params;
+      const {  recipients } = req.body;
+  
+      // Find the team by ID
+      const team = await Team.findById(teamId);
+      if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+  
+      
+      const teamCode = team.teamCode ;
+
+      const subject = 'Team Invitation';
+      const message = `You have been invited to join the team.\n\nTeam Code: ${teamCode}\nDomain: ${domainName}`;
+  
+      // Iterate over recipients and send an email to each
+      for (const email of recipients) {
+        await sendEmail({ email, subject, message });
+      }
+  
+      res.json({ success: true, message: 'Emails sent successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
   
   
+  const joinTeamController = async (req, res) => {
+    try {
+      const { teamCode, domainName } = req.body;
+      const { email } = req.params;
+  
+      // Find the team with the provided team code and domain name
+      const team = await Team.findOne({ teamCode, 'domains.name': domainName });
+      if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+  
+      // Check if the user's email is already a member of the specified domain
+      const isUserAlreadyMember = team.domains.some(domain => domain.members.includes(email));
+      if (isUserAlreadyMember) {
+        return res.status(400).json({ error: 'User is already a member of the specified domain' });
+      }
+  
+      // Add the user's email to the specified domain
+      const domainIndex = team.domains.findIndex(domain => domain.name === domainName);
+      team.domains[domainIndex].members.push(email);
+      await team.save();
+  
+      res.json({ success: true, message: 'User added to the team and domain successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
   
   
   
@@ -78,4 +138,6 @@ const getTeamsController = async (req, res) => {
 module.exports = {
     createTeamController,
     getTeamsController,
+    sendTeamcodeController,
+    joinTeamController,
 };
