@@ -9,11 +9,11 @@ const joinTeamController = require("../controllers/teamController.js").joinTeamC
 
 router.post("/createTeam",createTeamController );
 
-router.get("/showTeams/:email", getTeamsController );
+router.get("/showTeams", getTeamsController );
 
 router.post("/sendTeamcode/:teamId/:domainName",sendTeamcodeController );
 
-router.post("/joinTeam/:email",joinTeamController );
+router.post("/joinTeam",joinTeamController );
 
 
 

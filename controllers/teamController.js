@@ -1,9 +1,9 @@
-
+require("dotenv").config()
 
 const User = require('../models/userModel.js');
 const Team = require('../models/teamModel.js');
 const sendEmail = require("../utils/email.js");
-
+const jwt=require("jsonwebtoken");
 
 
 function generateTeamCode() {
@@ -16,9 +16,22 @@ function generateTeamCode() {
   }
 
 const createTeamController = async (req, res) => {
-    const { leaderId,leaderEmail, teamName, domains } = req.body;
+    const { leaderId, teamName, domains } = req.body;
+    console.log("teamname:",teamName);
+    console.log("domains:",domains);
 
   try {
+
+    const authorizationHeader = req.headers.authorization;
+    console.log("token:",authorizationHeader);
+    if (!authorizationHeader) {
+      return res.status(401).json({ error: 'Authorization header missing' });
+    }
+
+    const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
+    console.log("decodedtoken:",decodedToken);
+    const leaderEmail = decodedToken.email;
+    console.log("email:",leaderEmail);
     // Validate that the leader exists
     // const leader = await User.findById(leaderId);
     // if (!leader) {
@@ -51,7 +64,18 @@ const createTeamController = async (req, res) => {
 
 const getTeamsController = async (req, res) => {
     try {
-      const { email } = req.params;
+      const authorizationHeader = req.headers.authorization;
+    console.log("token:",authorizationHeader);
+    if (!authorizationHeader) {
+      return res.status(401).json({ error: 'Authorization header missing' });
+    }
+
+    const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
+    console.log("decodedtoken:",decodedToken);
+    const email = decodedToken.email;
+    console.log("email:",email);
+
+      //const { email } = req.params;
       
   
       // Find the user by email
@@ -105,7 +129,18 @@ const sendTeamcodeController = async (req, res) => {
   const joinTeamController = async (req, res) => {
     try {
       const { teamCode, domainName } = req.body;
-      const { email } = req.params;
+      const authorizationHeader = req.headers.authorization;
+    console.log("token:",authorizationHeader);
+    if (!authorizationHeader) {
+      return res.status(401).json({ error: 'Authorization header missing' });
+    }
+
+    const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
+    console.log("decodedtoken:",decodedToken);
+    const email = decodedToken.email;
+    console.log("email:",email);
+
+
   
       // Find the team with the provided team code and domain name
       const team = await Team.findOne({ teamCode, 'domains.name': domainName });

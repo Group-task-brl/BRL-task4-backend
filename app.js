@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const {createServer} = require("http");
 const {Server} = require("socket.io");
+const jwt=require("jsonwebtoken");
+const{setUser,getUser}=require("./middleware/auth");
 
 const connectDB = require("./config/db");
 
@@ -80,6 +82,10 @@ app.get("/error",async(req,res)=>{
         const email=user.email;
         const name=user.name;
         send_mail_registration(email,name);
+        const token = setUser(user);
+            
+        return res.json(token); 
+
     
 
     return res.json("User entered successfully!");
