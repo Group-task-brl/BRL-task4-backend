@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 
 const teamSchema = new mongoose.Schema({
-  leader: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Assuming you have a User schema
-    // required: true
-  },
+  // leader: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'User', // Assuming you have a User schema
+  //   // required: true
+  // },
   leaderEmail: {
     type: String,
-    required: true, // adjust the required constraint as needed
+    required: true, 
   },
   teamName: {
     type: String,

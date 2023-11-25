@@ -16,21 +16,21 @@ function generateTeamCode() {
   }
 
 const createTeamController = async (req, res) => {
-    const { leaderId,leaderEmail, teamName, domains } = req.body;
+    const { leaderEmail, teamName, domains } = req.body;
 
   try {
     // Validate that the leader exists
-    // const leader = await User.findById(leaderId);
-    // if (!leader) {
-    //   return res.status(404).json({ error: 'Leader not found' });
-    // }
+    const leader = await User.findOne({ email: leaderEmail });
+    if (!leader) {
+      return res.status(404).json({ error: 'Leader not found' });
+    }
 
     // Generate a unique team code
     const teamCode = generateTeamCode();
 
     // Create a new team with the generated code
     const newTeam = new Team({
-    //   leader: leader._id,
+    
       leaderEmail:leaderEmail,
       teamName: teamName,
       domains: domains,
@@ -51,7 +51,7 @@ const createTeamController = async (req, res) => {
 
 const getTeamsController = async (req, res) => {
     try {
-      const { email } = req.params;
+      const { email } = req.body;
       
   
       // Find the user by email
@@ -104,8 +104,8 @@ const sendTeamcodeController = async (req, res) => {
   
   const joinTeamController = async (req, res) => {
     try {
-      const { teamCode, domainName } = req.body;
-      const { email } = req.params;
+      const { email,teamCode, domainName } = req.body;
+      
   
       // Find the team with the provided team code and domain name
       const team = await Team.findOne({ teamCode, 'domains.name': domainName });
