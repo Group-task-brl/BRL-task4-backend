@@ -16,34 +16,26 @@ function generateTeamCode() {
   }
 
 const createTeamController = async (req, res) => {
-    const { leaderId, teamName, domains } = req.body;
-    console.log("teamname:",teamName);
-    console.log("domains:",domains);
+    const {  teamName, domains } = req.body;
+  
 
   try {
 
     const authorizationHeader = req.headers.authorization;
-    console.log("token:",authorizationHeader);
+  
     if (!authorizationHeader) {
       return res.status(401).json({ error: 'Authorization header missing' });
     }
 
     const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
-    console.log("decodedtoken:",decodedToken);
+    
     const leaderEmail = decodedToken.email;
-    console.log("email:",leaderEmail);
-    // Validate that the leader exists
-    // const leader = await User.findById(leaderId);
-    // if (!leader) {
-    //   return res.status(404).json({ error: 'Leader not found' });
-    // }
 
-    // Generate a unique team code
+   
     const teamCode = generateTeamCode();
 
-    // Create a new team with the generated code
     const newTeam = new Team({
-    //   leader: leader._id,
+    
       leaderEmail:leaderEmail,
       teamName: teamName,
       domains: domains,
@@ -65,20 +57,18 @@ const createTeamController = async (req, res) => {
 const getTeamsController = async (req, res) => {
     try {
       const authorizationHeader = req.headers.authorization;
-    console.log("token:",authorizationHeader);
+    
     if (!authorizationHeader) {
       return res.status(401).json({ error: 'Authorization header missing' });
     }
 
     const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
-    console.log("decodedtoken:",decodedToken);
+   
     const email = decodedToken.email;
-    console.log("email:",email);
-
-      //const { email } = req.params;
+    
       
   
-      // Find the user by email
+      
       const user = await User.findOne({ email: email });
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
@@ -101,7 +91,7 @@ const sendTeamcodeController = async (req, res) => {
       const { teamId,domainName } = req.params;
       const {  recipients } = req.body;
   
-      // Find the team by ID
+     
       const team = await Team.findById(teamId);
       if (!team) {
         return res.status(404).json({ error: 'Team not found' });
@@ -113,7 +103,7 @@ const sendTeamcodeController = async (req, res) => {
       const subject = 'Team Invitation';
       const message = `You have been invited to join the team.\n\nTeam Code: ${teamCode}\nDomain: ${domainName}`;
   
-      // Iterate over recipients and send an email to each
+    
       for (const email of recipients) {
         await sendEmail({ email, subject, message });
       }
@@ -141,20 +131,17 @@ const sendTeamcodeController = async (req, res) => {
     console.log("email:",email);
 
 
-  
-      // Find the team with the provided team code and domain name
       const team = await Team.findOne({ teamCode, 'domains.name': domainName });
       if (!team) {
-        return res.status(404).json({ error: 'Team not found' });
+        return res.status(404).json({ error: 'Team or domainName may be wrong' });
       }
-  
-      // Check if the user's email is already a member of the specified domain
+
+
       const isUserAlreadyMember = team.domains.some(domain => domain.members.includes(email));
       if (isUserAlreadyMember) {
-        return res.status(400).json({ error: 'User is already a member of the specified domain' });
+        return res.status(400).json({ error: 'User is already a member of some domain' });
       }
   
-      // Add the user's email to the specified domain
       const domainIndex = team.domains.findIndex(domain => domain.name === domainName);
       team.domains[domainIndex].members.push(email);
       await team.save();
@@ -166,7 +153,144 @@ const sendTeamcodeController = async (req, res) => {
     }
   };
 
+  const getTeamByCodeController = async (req, res) => {
+    try {
+      const { teamCode } = req.params;
   
+      
+      const team = await Team.findOne({ teamCode });
+  
+      if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+  
+      res.json({ success: true, team });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
+
+
+  const addTaskController = async (req, res) => {
+    try {
+
+      const authorizationHeader = req.headers.authorization;
+    
+    if (!authorizationHeader) {
+      return res.status(401).json({ error: 'Authorization header missing' });
+    }
+
+    const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
+    
+    const leadEmail = decodedToken.email;
+    
+
+      const { teamCode } = req.params;
+      const { domainName, email, task, deadline } = req.body;
+  
+      
+      const team = await Team.findOne({ teamCode });
+  
+      if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+      if (team.leaderEmail !== leadEmail) {
+        return res.status(403).json({ error: 'Only the team leader is allowed to add tasks' });
+      }
+  
+     
+      const domain = team.domains.find((domain) => domain.name === domainName);
+  
+      if (!domain) {
+        return res.status(404).json({ error: 'Domain not found within the team' });
+      }
+
+      const isEmailInDomain = domain.members.includes(email);
+      if (!isEmailInDomain) {
+        return res.status(400).json({ error: 'Assigned email is not a member of the specified domain' });
+      }
+
+      const isTaskAssigned = domain.tasks.some(
+        (taskObj) => taskObj.assignedTo === email && taskObj.description === task
+      );
+      if (isTaskAssigned) {
+        return res.status(400).json({ error: 'Task already assigned to the specified email' });
+      }
+  
+      domain.tasks.push({
+        description: task,
+        assignedTo: email,
+        deadline: deadline,
+        completed: false, 
+      });
+  
+      
+      await team.save();
+  
+      res.json({ success: true, message: 'Task added successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
+
+  const taskCompletedController = async (req, res) => {
+    try {
+
+      const authorizationHeader = req.headers.authorization;
+    
+      if (!authorizationHeader) {
+        return res.status(401).json({ error: 'Authorization header missing' });
+      }
+  
+      const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
+      
+      const leadEmail = decodedToken.email;
+
+      const { teamCode, domainName, email, task } = req.body;
+  
+     
+      const team = await Team.findOne({ teamCode });
+  
+      if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+
+
+      if (team.leaderEmail !== leadEmail) {
+        return res.status(403).json({ error: 'Only the team leader is allowed to mark tasks' });
+      }
+  
+      
+      const domain = team.domains.find((domain) => domain.name === domainName);
+  
+      if (!domain) {
+        return res.status(404).json({ error: 'Domain not found within the team' });
+      }
+  
+     
+      const taskToComplete = domain.tasks.find(
+        (taskObj) => taskObj.assignedTo === email && taskObj.description === task
+      );
+  
+      if (!taskToComplete) {
+        return res.status(404).json({ error: 'Task not found for the specified email and description' });
+      }
+  
+      taskToComplete.completed = true;
+  
+      await team.save();
+  
+      res.json({ success: true, message: 'Task marked as completed successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
   
   
 
@@ -175,4 +299,7 @@ module.exports = {
     getTeamsController,
     sendTeamcodeController,
     joinTeamController,
+    getTeamByCodeController,
+    addTaskController,
+    taskCompletedController,
 };

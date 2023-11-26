@@ -1,51 +1,69 @@
 const mongoose = require('mongoose');
 
-const teamSchema = new mongoose.Schema({
-  leader: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Assuming you have a User schema
-    // required: true
+
+const taskSchema = new mongoose.Schema({
+  description: {
+    type: String,
+    required: true,
   },
+  assignedTo: {
+    type: String,
+    required: true,
+  },
+  deadline: {
+    type: String,
+    required: true,
+  },
+  completed: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+
+
+
+
+const teamSchema = new mongoose.Schema({
   leaderEmail: {
     type: String,
-    required: true, // adjust the required constraint as needed
+    required: true,
   },
   teamName: {
     type: String,
-    required: true
+    required: true,
   },
   domains: [
     {
       name: {
         type: String,
-        required: true
+        required: true,
       },
       members: [
         {
           type: String,
-        }
-      ]
-    }
+        },
+      ],
+      tasks: [taskSchema], 
+    },
   ],
   teamCode: {
     type: String,
     unique: true,
-    required: true
+    required: true,
   },
   numberOfMembers: {
     type: Number,
-    default: 0
+    default: 0,
   },
-  
- 
   createdAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   updatedAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 // teamSchema.pre('save', async function (next) {
