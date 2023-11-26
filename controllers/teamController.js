@@ -74,8 +74,14 @@ const getTeamsController = async (req, res) => {
         return res.status(404).json({ error: 'User not found' });
       }
   
-      
-      const teams = await Team.find({ 'domains.members': email });
+   
+
+      const teams = await Team.find({
+        $or: [
+          { 'domains.members': email }, 
+          { leaderEmail: email }, 
+        ],
+      });
   
       res.json({ success: true, teams });
     } catch (error) {
