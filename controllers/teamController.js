@@ -31,6 +31,12 @@ const createTeamController = async (req, res) => {
     
     const leaderEmail = decodedToken.email;
 
+    const leaderUser = await User.findOne({ email: leaderEmail });
+
+    if (!leaderUser) {
+      return res.status(404).json({ error: 'access denied' });
+    }
+
    
     const teamCode = generateTeamCode();
 
@@ -94,6 +100,26 @@ const getTeamsController = async (req, res) => {
 
 const sendTeamcodeController = async (req, res) => {
     try {
+
+
+      const authorizationHeader = req.headers.authorization;
+    
+    if (!authorizationHeader) {
+      return res.status(401).json({ error: 'Authorization header missing' });
+    }
+
+    const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
+   
+    const leaderEmail = decodedToken.email;
+
+    const leaderUser = await User.findOne({ email: leaderEmail });
+
+    if (!leaderUser) {
+      return res.status(404).json({ error: 'access denied' });
+    }
+
+
+
       const { teamId,domainName } = req.params;
       const {  recipients } = req.body;
 
@@ -133,9 +159,9 @@ const sendTeamcodeController = async (req, res) => {
     }
 
     const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
-    console.log("decodedtoken:",decodedToken);
+    
     const email = decodedToken.email;
-    console.log("email:",email);
+    
 
 
       const team = await Team.findOne({ teamCode, 'domains.name': domainName });
@@ -310,6 +336,13 @@ const sendTeamcodeController = async (req, res) => {
       const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
   
       const email = decodedToken.email;
+
+      const leaderUser = await User.findOne({ email: email });
+
+    if (!leaderUser) {
+      return res.status(404).json({ error: 'access denied' });
+    }
+
   
       const { teamId } = req.params;
   
@@ -357,6 +390,12 @@ const sendTeamcodeController = async (req, res) => {
       const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
   
       const email = decodedToken.email;
+
+      const leaderUser = await User.findOne({ email: email });
+
+    if (!leaderUser) {
+      return res.status(404).json({ error: 'access denied' });
+    }
   
       
       const teams = await Team.find({
@@ -406,7 +445,13 @@ const sendTeamcodeController = async (req, res) => {
   
       const email = decodedToken.email;
   
-      // Find teams where the user is either the leader or a member
+      const leaderUser = await User.findOne({ email: email });
+
+    if (!leaderUser) {
+      return res.status(404).json({ error: 'access denied' });
+    }
+
+
       const teams = await Team.find({
         $or: [
           { leaderEmail: email },
