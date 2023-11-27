@@ -8,6 +8,7 @@ const joinTeamController = require("../controllers/teamController.js").joinTeamC
 const getTeamByCodeController = require("../controllers/teamController.js").getTeamByCodeController;
 const addTaskController = require("../controllers/teamController.js").addTaskController;
 const taskCompletedController = require("../controllers/teamController.js").taskCompletedController;
+const deleteMemberController = require("../controllers/teamController.js").deleteMemberController;
 
 
 router.post("/createTeam",createTeamController );
@@ -25,6 +26,7 @@ router.post("/task/:teamCode", addTaskController);
 
 router.post("/taskDone", taskCompletedController);
 
+router.post("/deleteMember/:teamId",deleteMemberController);
 
 
 module.exports = router;
