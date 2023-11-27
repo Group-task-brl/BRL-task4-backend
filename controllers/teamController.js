@@ -299,60 +299,52 @@ const sendTeamcodeController = async (req, res) => {
     }
   };
 
-  const deleteMemberController=async(req,res)=>{
-    try{
-      const authorizationHeader=req.headers.authorization;
-
-      if(!authorizationHeader){
-        return res.status(401).json({error:"Authorization header missing"});
+  const deleteMemberController = async (req, res) => {
+    try {
+      const authorizationHeader = req.headers.authorization;
+  
+      if (!authorizationHeader) {
+        return res.status(401).json({ error: "Authorization header missing" });
       }
-      const decodedToken=jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
-
-      const email=decodedToken.email;
-      
-      const { teamId} = req.params;
-      
-
-      const team=await Team.findOne({"_id":teamId});
-
-
-      if(email===team.leaderEmail){
-        const body=req.body;
-        const newLeaderEmail=body.Email;
-        if(!newLeaderEmail){
-          return res.status(400).json("Please enter new leader's email");
-        };
+  
+      const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
+  
+      const email = decodedToken.email;
+  
+      const { teamId } = req.params;
+  
+      const team = await Team.findOne({ "_id": teamId });
+  
+      if (email === team.leaderEmail) {
+        const body = req.body;
+        const newLeaderEmail = body.Email;
+  
+        if (!newLeaderEmail) {
+          return res.status(400).json({ error: "Please enter new leader's email" });
+        }
+  
         const domainWithMember = team.domains.find((domain) => domain.members.includes(newLeaderEmail));
-
+  
         if (!domainWithMember) {
           return res.status(400).json({ error: "New leader is not present in any domain" });
         }
-
+  
         domainWithMember.members = domainWithMember.members.filter(member => member !== newLeaderEmail);
-
+  
         team.leaderEmail = newLeaderEmail;
         await team.save();
+  
         return res.status(200).json({ message: "New leader assigned" });
+      } else {
+       
+        return res.status(403).json({ error: "You can't leave without the leader's permission" });
       }
-      else{
-
-        const domainWithMember = team.domains.find((domain) => domain.members.includes(emailToDelete));
-
-        if (!domainWithMember) {
-          return res.status(400).json({ error: "Email is not a member of any domain" });
-        }
-
-        domainWithMember.members = domainWithMember.members.filter(member => member !== emailToDelete);
-
-        await team.save();
-
-        return res.status(200).json({ message: "Member deleted successfully!" });
-      }
-    }catch(error){
+    } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal server error' });
     }
-  }
+  };
+  
 
 module.exports = {
     createTeamController,
