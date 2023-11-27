@@ -12,6 +12,7 @@ const connectDB = require("./config/db");
 
 const teamRoutes = require("./routes/teamRoutes.js");
 const userRoutes=require("./routes/userRoutes.js");
+const mlDataRoutes=require("./routes/mlDataRoutes.js");
 
 connectDB();
 
@@ -31,6 +32,7 @@ app.use(bodyParser.urlencoded({
   const{isUserPresent}=require("./controllers/userController");
   app.use("/team",teamRoutes);
   app.use("/user",userRoutes);
+  app.use("/mlData",mlDataRoutes);
   app.use(session({
     secret: process.env.SECRET_KEY_SESSION, 
     resave: false,
