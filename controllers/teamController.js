@@ -28,7 +28,7 @@ const createTeamController = async (req, res) => {
     }
 
     const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
-    
+
     const leaderEmail = decodedToken.email;
 
     const leaderUser = await User.findOne({ email: leaderEmail });
@@ -61,40 +61,36 @@ const createTeamController = async (req, res) => {
 
 
 const getTeamsController = async (req, res) => {
-    try {
+  try {
       const authorizationHeader = req.headers.authorization;
-    
-    if (!authorizationHeader) {
-      return res.status(401).json({ error: 'Authorization header missing' });
-    }
 
-    const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
-   
-    const email = decodedToken.email;
-    
-      
-  
-      
+      if (!authorizationHeader) {
+          return res.status(401).json({ error: 'Authorization header missing' });
+      }
+
+      const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
+
+      const email = decodedToken.email;
+
       const user = await User.findOne({ email: email });
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+          return res.status(404).json({ error: 'User not found' });
       }
-  
-   
 
       const teams = await Team.find({
-        $or: [
-          { 'domains.members': email }, 
-          { leaderEmail: email }, 
-        ],
+          $or: [
+              { 'domains.members': email },
+              { leaderEmail: email },
+          ],
       });
-  
-      res.json({ success: true, teams });
-    } catch (error) {
+
+      res.json({ success: true, email, teams });
+  } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal server error' });
-    }
-  };
+  }
+};
+
   
   
 
