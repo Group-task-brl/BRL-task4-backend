@@ -344,8 +344,104 @@ const sendTeamcodeController = async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
     }
   };
-  
 
+  //
+  const completedTaskController = async (req, res) => {
+    try {
+      const authorizationHeader = req.headers.authorization;
+  
+      if (!authorizationHeader) {
+        return res.status(401).json({ error: "Authorization header missing" });
+      }
+  
+      const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
+  
+      const email = decodedToken.email;
+  
+      
+      const teams = await Team.find({
+        $or: [
+          { leaderEmail: email },
+          { "domains.members": email }
+        ]
+      });
+  
+      if (!teams || teams.length === 0) {
+        return res.json({ completedTasks: [] });
+      }
+  
+      let completedTasks = [];
+  
+      teams.forEach((team) => {
+        team.domains.forEach((domain) => {
+          domain.tasks.forEach((task) => {
+            if (task.completed) {
+              completedTasks.push({
+                description: task.description,
+                assignedTo: task.assignedTo,
+                deadline: task.deadline
+              });
+            }
+          });
+        });
+      });
+  
+      res.json({ completedTasks });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  };
+  //
+
+  const incompleteTaskController = async (req, res) => {
+    try {
+      const authorizationHeader = req.headers.authorization;
+  
+      if (!authorizationHeader) {
+        return res.status(401).json({ error: "Authorization header missing" });
+      }
+  
+      const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
+  
+      const email = decodedToken.email;
+  
+      // Find teams where the user is either the leader or a member
+      const teams = await Team.find({
+        $or: [
+          { leaderEmail: email },
+          { "domains.members": email }
+        ]
+      });
+  
+      if (!teams || teams.length === 0) {
+        return res.json({ incompleteTasks: [] });
+      }
+  
+      let incompleteTasks = [];
+  
+      teams.forEach((team) => {
+        team.domains.forEach((domain) => {
+          domain.tasks.forEach((task) => {
+            if (!task.completed) {
+              incompleteTasks.push({
+                description: task.description,
+                assignedTo: task.assignedTo,
+                deadline: task.deadline
+              });
+            }
+          });
+        });
+      });
+  
+      res.json({ incompleteTasks });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  };
+  
+  
 module.exports = {
     createTeamController,
     getTeamsController,
@@ -354,6 +450,8 @@ module.exports = {
     getTeamByCodeController,
     addTaskController,
     taskCompletedController,
-    deleteMemberController
+    deleteMemberController,
+    completedTaskController,
+    incompleteTaskController,
 
 }
