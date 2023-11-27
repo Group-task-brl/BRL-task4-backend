@@ -1,34 +1,90 @@
-const mongoose=require("mongoose");
+// const mongoose=require("mongoose");
 
-const findOrCreate = require("mongoose-findorcreate");
+// const findOrCreate = require("mongoose-findorcreate");
 
-const userSchema=new mongoose.Schema({
+// const userSchema=new mongoose.Schema({
 
-name:{
-    type:String,
-    required:true,
-    unique:false,
-},
-email:{
-    type:String,
-    required:true,
-    unique:true,
-},
-password:{
-    type:String,
-    required:false,
-    unique:false,
-},
-isLoggedIn:{
-    type:String,
-    required:false,
-    enum:["Yes","No"],
-    default:"No", 
-}
+// name:{
+//     type:String,
+//     required:true,
+//     unique:false,
+// },
+// email:{
+//     type:String,
+//     required:true,
+//     unique:true,
+// },
+// password:{
+//     type:String,
+//     required:false,
+//     unique:false,
+// },
+// isLoggedIn:{
+//     type:String,
+//     required:false,
+//     enum:["Yes","No"],
+//     default:"No", 
+// }
+// });
+
+
+// userSchema.plugin(findOrCreate);
+// const User=mongoose.model("User",userSchema);
+
+// module.exports=User;
+
+
+
+
+
+
+
+
+
+
+
+
+const mongoose = require('mongoose');
+const findOrCreate = require('mongoose-findorcreate');
+
+const assignedTeamsSchema = new mongoose.Schema({
+  teamId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Team',
+    required: true,
+  },
+  domain: {
+    type: String,
+    required: true,
+  },
 });
 
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: false,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: false,
+    unique: false,
+  },
+  isLoggedIn: {
+    type: String,
+    required: false,
+    enum: ['Yes', 'No'],
+    default: 'No',
+  },
+  assignedTeams: [assignedTeamsSchema], // Array of assigned teams
+});
 
 userSchema.plugin(findOrCreate);
-const User=mongoose.model("User",userSchema);
+const User = mongoose.model('User', userSchema);
 
-module.exports=User;
+module.exports = User;

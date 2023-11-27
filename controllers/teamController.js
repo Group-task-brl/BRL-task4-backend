@@ -98,93 +98,148 @@ const getTeamsController = async (req, res) => {
   
   
 
+
+
 const sendTeamcodeController = async (req, res) => {
-    try {
-
-
+  try {
       const authorizationHeader = req.headers.authorization;
-    
-    if (!authorizationHeader) {
-      return res.status(401).json({ error: 'Authorization header missing' });
-    }
 
-    const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
-   
-    const leaderEmail = decodedToken.email;
+      if (!authorizationHeader) {
+          return res.status(401).json({ error: 'Authorization header missing' });
+      }
 
-    const leaderUser = await User.findOne({ email: leaderEmail });
+      const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
+      const leaderEmail = decodedToken.email;
 
-    if (!leaderUser) {
-      return res.status(404).json({ error: 'access denied' });
-    }
+      const leaderUser = await User.findOne({ email: leaderEmail });
 
+      if (!leaderUser) {
+          return res.status(404).json({ error: 'Access denied' });
+      }
 
-
-      const { teamId,domainName } = req.params;
-      const {  recipients } = req.body;
+      const { teamId, domainName } = req.params;
+      const { recipients } = req.body;
 
       if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
-        return res.status(400).json({ error: 'No recipients defined' });
+          return res.status(400).json({ error: 'No recipients defined' });
       }
-  
-     
+
       const team = await Team.findById(teamId);
       if (!team) {
-        return res.status(404).json({ error: 'Team not found' });
+          return res.status(404).json({ error: 'Team not found' });
       }
-  
-      
-      const teamCode = team.teamCode ;
-      for(const email of recipients){
-      send_team_code(email,teamCode,domainName);}
+
+      const teamCode = team.teamCode;
+
+      for (const email of recipients) {
+        
+          await send_team_code(email, teamCode, domainName);
+
+          const user = await User.findOne({ email });
+          if (user) {
+             
+              const isAlreadyAssigned = user.assignedTeams.some(
+                  (assignment) =>
+                      assignment.teamId.toString() === teamId && assignment.domain === domainName
+              );
+
+              if (!isAlreadyAssigned) {
+                  user.assignedTeams.push({
+                      teamId,
+                      domain: domainName,
+                  });
+                  await user.save();
+              }
+          }
+      }
 
       return res.json({ success: true, message: 'Emails sent successfully' });
-
-    } catch (error) {
+  } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal server error' });
-    }
-  };
-  
+  }
+};
 
   
-  
+
   const joinTeamController = async (req, res) => {
     try {
-      const { teamCode, domainName } = req.body;
-      const authorizationHeader = req.headers.authorization;
-    console.log("token:",authorizationHeader);
-    if (!authorizationHeader) {
-      return res.status(401).json({ error: 'Authorization header missing' });
-    }
+        const { teamCode } = req.body;
+        const authorizationHeader = req.headers.authorization;
 
-    const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
-    
-    const email = decodedToken.email;
-    
+        if (!authorizationHeader) {
+            return res.status(401).json({ error: 'Authorization header missing' });
+        }
 
+        const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
+        const email = decodedToken.email;
 
-      const team = await Team.findOne({ teamCode, 'domains.name': domainName });
-      if (!team) {
-        return res.status(404).json({ error: 'Team or domainName may be wrong' });
+       
+        const team = await Team.findOne({ teamCode });
+
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+
+       
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+      
+        if (user.assignedTeams.length === 0) {
+            return res.status(400).json({ error: 'User is not assigned to any teams' });
+        }
+
+        const isUserAlreadyMember = team.domains.some((domain) =>
+            domain.members.includes(email)
+        );
+
+        if (isUserAlreadyMember) {
+            return res.status(400).json({ error: 'User is already a member of some domain in the team' });
+        }
+
+        
+        const assignedTeam = user.assignedTeams.find(
+          (assignedTeam) => assignedTeam.teamId.toString() === team._id.toString()
+      );
+      
+      if (!assignedTeam) {
+          return res.status(400).json({ error: 'User is not assigned to the specified team' });
       }
-
-
-      const isUserAlreadyMember = team.domains.some(domain => domain.members.includes(email));
-      if (isUserAlreadyMember) {
-        return res.status(400).json({ error: 'User is already a member of some domain' });
+      
+      const isValidDomain = team.domains.some(
+          (domain) => domain.name === assignedTeam.domain
+      );
+      
+      if (!isValidDomain) {
+          return res.status(400).json({ error: 'Invalid domain assigned to the user for the specified team' });
       }
-  
-      const domainIndex = team.domains.findIndex(domain => domain.name === domainName);
+      
+      
+      const domainIndex = team.domains.findIndex((domain) => domain.name === assignedTeam.domain);
+      
+      if (domainIndex === -1) {
+          return res.status(400).json({ error: 'Invalid domain assigned to the user for the specified team' });
+      }
+      
       team.domains[domainIndex].members.push(email);
       await team.save();
-  
-      res.json({ success: true, message: 'User added to the team and domain successfully' });
+     
+
+        res.json({ success: true, message: 'User added to the team and domain successfully' });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-  };
+};
+
+
+
+
+
 
   const getTeamByCodeController = async (req, res) => {
     try {
