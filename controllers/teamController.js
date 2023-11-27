@@ -2,7 +2,7 @@ require("dotenv").config()
 
 const User = require('../models/userModel.js');
 const Team = require('../models/teamModel.js');
-const sendEmail = require("../utils/email.js");
+const {send_team_code}=require("./mailController.js");
 const jwt=require("jsonwebtoken");
 
 
@@ -96,6 +96,10 @@ const sendTeamcodeController = async (req, res) => {
     try {
       const { teamId,domainName } = req.params;
       const {  recipients } = req.body;
+
+      if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+        return res.status(400).json({ error: 'No recipients defined' });
+      }
   
      
       const team = await Team.findById(teamId);
@@ -105,16 +109,11 @@ const sendTeamcodeController = async (req, res) => {
   
       
       const teamCode = team.teamCode ;
+      for(const email of recipients){
+      send_team_code(email,teamCode,domainName);}
 
-      const subject = 'Team Invitation';
-      const message = `You have been invited to join the team.\n\nTeam Code: ${teamCode}\nDomain: ${domainName}`;
-  
-    
-      for (const email of recipients) {
-        await sendEmail({ email, subject, message });
-      }
-  
-      res.json({ success: true, message: 'Emails sent successfully' });
+      return res.json({ success: true, message: 'Emails sent successfully' });
+
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal server error' });
@@ -297,8 +296,61 @@ const sendTeamcodeController = async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
     }
   };
-  
-  
+
+  const deleteMemberController=async(req,res)=>{
+    try{
+      const authorizationHeader=req.headers.authorization;
+
+      if(!authorizationHeader){
+        return res.status(401).json({error:"Authorization header missing"});
+      }
+      const decodedToken=jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
+
+      const email=decodedToken.email;
+      
+      const { teamId} = req.params;
+      
+
+      const team=await Team.findOne({"_id":teamId});
+
+
+      if(email===team.leaderEmail){
+        const body=req.body;
+        const newLeaderEmail=body.Email;
+        if(!newLeaderEmail){
+          return res.status(400).json("Please enter new leader's email");
+        };
+        const domainWithMember = team.domains.find((domain) => domain.members.includes(newLeaderEmail));
+
+        if (!domainWithMember) {
+          return res.status(400).json({ error: "New leader is not present in any domain" });
+        }
+
+        domainWithMember.members = domainWithMember.members.filter(member => member !== newLeaderEmail);
+
+        team.leaderEmail = newLeaderEmail;
+        await team.save();
+        return res.status(200).json({ message: "New leader assigned" });
+      }
+      else{
+
+        const domainWithMember = team.domains.find((domain) => domain.members.includes(emailToDelete));
+
+        if (!domainWithMember) {
+          return res.status(400).json({ error: "Email is not a member of any domain" });
+        }
+
+        domainWithMember.members = domainWithMember.members.filter(member => member !== emailToDelete);
+
+        await team.save();
+
+        return res.status(200).json({ message: "Member deleted successfully!" });
+      }
+    }catch(error){
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 
 module.exports = {
     createTeamController,
@@ -308,4 +360,6 @@ module.exports = {
     getTeamByCodeController,
     addTaskController,
     taskCompletedController,
-};
+    deleteMemberController
+
+}
