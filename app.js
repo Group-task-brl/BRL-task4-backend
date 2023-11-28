@@ -106,7 +106,7 @@ app.get("/error",async(req,res)=>{
   }); 
 
 
-  //IMAGE ROUTES
+  /*IMAGE ROUTES
 
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -175,7 +175,7 @@ app.post('/image/uploadImg/:teamId', upload.single('img'), (req, res, next) => {
           console.log(err);
           res.status(500).json({ error: 'Internal Server Error' });
       });
-});
+});*/
 
 
 const PORT = process.env.PORT || 4000;
