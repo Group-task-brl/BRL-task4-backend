@@ -10,7 +10,7 @@ const{setUser,getUser}=require("./middleware/auth");
 
 const connectDB = require("./config/db");
 //const imgSchema = require('./models/teamModel.js');
-const multer = require('multer');
+// const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
@@ -108,76 +108,76 @@ app.get("/error",async(req,res)=>{
   }); 
 
 
-  /*IMAGE ROUTES
+  //IMAGE ROUTES
 
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads')
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.fieldname + '-' + Date.now())
-    }
-});
+//   const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, 'uploads')
+//     },
+//     filename: (req, file, cb) => {
+//         cb(null, file.fieldname + '-' + Date.now())
+//     }
+// });
 
-const upload = multer({ storage: storage });
+// const upload = multer({ storage: storage });
 
-const imgSchema = new mongoose.Schema({
-  teamId: {
-    type: String,
-    required: true,
-  },
-  name: String,
-  desc: String,
-  img: {
-    data: Buffer,
-    contentType: String,
-  },
-});
+// const imgSchema = new mongoose.Schema({
+//   teamId: {
+//     type: String,
+//     required: true,
+//   },
+//   name: String,
+//   desc: String,
+//   img: {
+//     data: Buffer,
+//     contentType: String,
+//   },
+// });
 
-const Image = mongoose.model('Image', imgSchema);
-
-
-app.get('/image/showImg/:teamId', (req, res) => {
-    const { teamId } = req.params;
-
-    Image.find({ teamId })
-        .then((data, err) => {
-            if (err) {
-                console.log(err);
-                res.status(500).json({ error: 'Internal Server Error' });
-            } else {
-                res.json({ items: data });
-            }
-        });
-});
+// const Image = mongoose.model('Image', imgSchema);
 
 
-app.post('/image/uploadImg/:teamId', upload.single('img'), (req, res, next) => {
-  const { teamId } = req.params;
+// app.get('/image/showImg/:teamId', (req, res) => {
+//     const { teamId } = req.params;
 
-  const obj = {
-      teamId: teamId,
-      name: req.body.name,
-      desc: req.body.desc,
-      img: {
-          data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
-          contentType: req.file.mimetype,
-      },
-  };
+//     Image.find({ teamId })
+//         .then((data, err) => {
+//             if (err) {
+//                 console.log(err);
+//                 res.status(500).json({ error: 'Internal Server Error' });
+//             } else {
+//                 res.json({ items: data });
+//             }
+//         });
+// });
 
-  Image.create(obj)
-      .then((item) => {
-          res.status(201).json({
-              success: true,
-              message: 'File successfully uploaded.',
+
+// app.post('/image/uploadImg/:teamId', upload.single('img'), (req, res, next) => {
+//   const { teamId } = req.params;
+
+//   const obj = {
+//       teamId: teamId,
+//       name: req.body.name,
+//       desc: req.body.desc,
+//       img: {
+//           data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
+//           contentType: req.file.mimetype,
+//       },
+//   };
+
+//   Image.create(obj)
+//       .then((item) => {
+//           res.status(201).json({
+//               success: true,
+//               message: 'File successfully uploaded.',
               
-          });
-      })
-      .catch((err) => {
-          console.log(err);
-          res.status(500).json({ error: 'Internal Server Error' });
-      });
-});*/
+//           });
+//       })
+//       .catch((err) => {
+//           console.log(err);
+//           res.status(500).json({ error: 'Internal Server Error' });
+//       });
+// });
 
 
 const PORT = process.env.PORT || 4000;
