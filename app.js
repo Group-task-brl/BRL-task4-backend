@@ -17,6 +17,8 @@ const path = require('path');
 const teamRoutes = require("./routes/teamRoutes.js");
 const userRoutes=require("./routes/userRoutes.js");
 const mlDataRoutes=require("./routes/mlDataRoutes.js");
+const textRoutes=require("./routes/textRoutes.js");
+
 
 connectDB();
 
@@ -37,6 +39,7 @@ app.use(bodyParser.urlencoded({
   app.use("/team",teamRoutes);
   app.use("/user",userRoutes);
   app.use("/mlData",mlDataRoutes);
+  app.use("/text",textRoutes);
   app.use(session({
     secret: process.env.SECRET_KEY_SESSION, 
     resave: false,
