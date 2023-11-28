@@ -129,7 +129,7 @@ const sendTeamcodeController = async (req, res) => {
 
       for (const email of recipients) {
         
-          await send_team_code(email, teamCode, domainName);
+       await send_team_code(email, teamCode, domainName);
 
           const user = await User.findOne({ email });
           if (user) {
@@ -155,6 +155,12 @@ const sendTeamcodeController = async (req, res) => {
       res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
+
+
+
+
 
   
 

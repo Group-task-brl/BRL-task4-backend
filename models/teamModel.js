@@ -90,4 +90,4 @@ function generateTeamCode() {
 
 const Team = mongoose.model('Team', teamSchema);
 
-module.exports = {Team};
+module.exports = Team;
