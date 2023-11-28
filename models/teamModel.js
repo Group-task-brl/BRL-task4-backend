@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 
+
 const taskSchema = new mongoose.Schema({
   description: {
     type: String,
@@ -90,4 +91,4 @@ function generateTeamCode() {
 
 const Team = mongoose.model('Team', teamSchema);
 
-module.exports = Team;
+module.exports = {Team};
