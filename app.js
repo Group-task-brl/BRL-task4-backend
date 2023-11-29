@@ -14,10 +14,13 @@ const connectDB = require("./config/db");
 const fs = require('fs');
 const path = require('path');
 
+const Chat = require("./models/chatModel");
+
 const teamRoutes = require("./routes/teamRoutes.js");
 const userRoutes=require("./routes/userRoutes.js");
 const mlDataRoutes=require("./routes/mlDataRoutes.js");
 const textRoutes=require("./routes/textRoutes.js");
+const chatRoutes=require("./routes/chatRoutes.js");
 
 
 
@@ -42,6 +45,7 @@ app.use(bodyParser.urlencoded({
   app.use("/user",userRoutes);
   app.use("/mlData",mlDataRoutes);
   app.use("/text",textRoutes);
+  app.use("/chat",chatRoutes);
   app.use(session({
     secret: process.env.SECRET_KEY_SESSION, 
     resave: false,
@@ -187,6 +191,39 @@ app.route("/").get((req, res) => {
 })
 
 
-app.listen(PORT,()=>{
+server=app.listen(PORT,()=>{
     console.log(`server started at ${PORT}`);
 })
+
+
+
+
+const io = require('socket.io')(server);
+
+io.on('connection', (socket) => {
+    console.log('Socket connected' , socket.id);
+    socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+    });
+    socket.on('message', async (data) => {
+        console.log('Message received on server: ', data);
+        socket.broadcast.emit('message', data);
+
+
+        try {
+                    const { username, message } = data;
+          
+                    const chatMessage = new Chat({
+                        username: username,
+                        message: message,
+                    });
+          
+                    await chatMessage.save();
+        } catch (error) {
+                    console.error('Error saving chat message:', error);
+                }
+
+
+
+    });
+}   );
