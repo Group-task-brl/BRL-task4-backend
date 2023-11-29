@@ -1,7 +1,9 @@
 require("dotenv").config()
 const User = require('../models/userModel.js');
-const {send_mail_registration,send_mail_OTP}=require("./mailController");
+const Team = require('../models/teamModel.js');
+const {send_mail_registration,send_mail_OTP,send_mail_message}=require("./mailController");
 const{setUser,getUser}=require("../middleware/auth");
+const jwt=require("jsonwebtoken");
 
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
@@ -114,7 +116,142 @@ async function handleUserLogin(req,res){
     }
 }
 
+async function resetPassword(req,res){
+    try{
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+    }
+
+    function generateOTP() {
+        return Math.floor(1000 + Math.random() * 9000);
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return res.status(404).json({ error: 'No such user found' });
+    }
+    const otp = generateOTP();
+
+    await User.findOneAndUpdate({ email }, { otp } /*{ new: true }*/);
+
+    send_mail_OTP(email,otp);
+    return res.status(200).json("Mail sent successfully!");
+    
+}catch(error){
+    console.error(error);
+    res.status(500).json("Internal server error");
+
+}
+}
+
+async function verifyOTP(req,res){
+    try{
+    const {email} = req.params;
+    console.log("email:",email);
+    const{OTP}=req.body;
+    console.log("OTP:",OTP);
+    if(!OTP){
+        return res.status(400).json("Please enter OTP");
+    }
+    
+    const user = await User.findOne({ "email":email });
+    console.log("user:",user);
+    if(!user){
+        return res.status(400).json("No such user found");
+    }
+    const true_otp=user.otp;
+    console.log("true_otp:",true_otp);
+    if(!true_otp){
+        return res.status(400).json("Please enter your mail to recieve OTP");
+    }
+    if(OTP===true_otp){
+        
+        return res.status(200).send("OTP verified!"); 
+    }
+    else{
+        return res.status(400).json("Invalid OTP");
+    }
+    }catch(error){
+        console.error(error);
+    res.status(500).json("Internal server error");
+
+    }
+}
+
+async function newPassword(req,res){
+    try{
+        const {email} = req.params;
+        const{newPassword,confirmPassword}=req.body;
+
+        if (!newPassword) {
+            return res.status(400).json({ error: "Please enter new password" });
+        }
+        if (!confirmPassword) {
+            return res.status(400).json({ error: 'Please confirm your password' });
+        }
+
+        if(newPassword!==confirmPassword){
+            return res.status(400).json({error:"New Password and Confirm Password should match"});
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        user.password = hashedPassword;
+        await user.save();
+        return res.status(200).json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+async function sendMessage(req,res){
+    try{
+        const{teamId}=req.params;
+        const authorizationHeader = req.headers.authorization;
+    
+      if (!authorizationHeader) {
+        return res.status(401).json({ error: 'Authorization header missing' });
+      }
+  
+      const decodedToken = jwt.verify(authorizationHeader,process.env.SECRET_KEY_JWT);
+      
+      const sender_email = decodedToken.email;
+      const{Email,message}=req.body;
+
+      const team = await Team.findById(teamId);
+
+        if (!team) {
+            return res.status(404).json({ error: 'Team not found' });
+        }
+        
+        const isRecipientMember = team.domains.some(domain => domain.members.includes(Email) || domain.leaderEmail === Email);
+
+        if (!isRecipientMember) {
+            return res.status(403).json({ error: 'You can only send mail to team members' });
+        }
+        if(Email===sender_email){
+            return res.status(400).json("You can't send a mail to yourself");
+        }
+
+        send_mail_message(Email, sender_email, message);
+
+        return res.status(200).json({ message: 'Mail sent successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
 
 
-module.exports={handleUserSignup,handleUserLogin};
+
+module.exports={handleUserSignup,handleUserLogin,resetPassword,verifyOTP,newPassword,sendMessage};
 

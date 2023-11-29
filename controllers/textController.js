@@ -47,10 +47,10 @@ const addTextController = async (req, res) => {
       
       const texts = await Text.find({ teamId });
   
-      // Extract unique email IDs from the text entries
+      
       const uniqueEmails = [...new Set(texts.map((text) => text.email))];
   
-      // Create an array to store text information grouped by email
+      
       const textsByMember = uniqueEmails.map((email) => ({
         email,
         texts: texts
