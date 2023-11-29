@@ -82,6 +82,11 @@ const userSchema = new mongoose.Schema({
     default: 'No',
   },
   assignedTeams: [assignedTeamsSchema], // Array of assigned teams
+  otp: {
+    type: String,
+    required: false,
+    default: 0,
+  },
 });
 
 userSchema.plugin(findOrCreate);
