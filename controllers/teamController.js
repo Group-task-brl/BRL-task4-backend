@@ -147,6 +147,9 @@ const sendTeamcodeController = async (req, res) => {
                   await user.save();
               }
           }
+          else {
+            return res.status(400).json({ error: `${email} is not a user on the app` });
+          }
       }
 
       return res.json({ success: true, message: 'Emails sent successfully' });

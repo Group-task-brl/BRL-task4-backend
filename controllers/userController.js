@@ -252,6 +252,52 @@ async function sendMessage(req,res){
 }
 
 
+async function checkUserRole(req, res) {
+    try {
+      const authorizationHeader = req.headers.authorization;
+  
+      if (!authorizationHeader) {
+        return res.status(401).json({ error: 'Authorization header missing' });
+      }
+  
+      const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
+  
+      const userEmail = decodedToken.email;
+      const { teamId } = req.params;
+  
+      const team = await Team.findById(teamId);
+  
+      if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+  
+      const isLeader = team.leaderEmail === userEmail;
+  
+      if (isLeader) {
+        return res.json({ role: 'leader' });
+      }
+  
+      const isMember = team.domains.some((domain) => domain.members.includes(userEmail));
+  
+      if (isMember) {
+        return res.json({ role: 'member' });
+      }
+  
+      return res.status(403).json({ error: 'User is not a leader or member of the team' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 
-module.exports={handleUserSignup,handleUserLogin,resetPassword,verifyOTP,newPassword,sendMessage};
+
+module.exports={
+    handleUserSignup,
+    handleUserLogin,
+    resetPassword,
+    verifyOTP,
+    newPassword,
+    sendMessage,
+    checkUserRole,
+};
 
