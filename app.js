@@ -1,4 +1,5 @@
 require('dotenv').config();
+// import cloudinary from './node_modules/cloudinary-core/src/index';
 const express= require ("express");
 const session = require("express-session"); 
 const bodyParser = require("body-parser");
@@ -6,6 +7,8 @@ const mongoose = require("mongoose");
 const {createServer} = require("http");
 const {Server} = require("socket.io");
 const jwt=require("jsonwebtoken");
+const fileUpload = require('express-fileupload');
+const cloudinary = require('cloudinary').v2;
 const{setUser,getUser}=require("./middleware/auth");
 
 const connectDB = require("./config/db");
@@ -21,15 +24,26 @@ const userRoutes=require("./routes/userRoutes.js");
 const mlDataRoutes=require("./routes/mlDataRoutes.js");
 const textRoutes=require("./routes/textRoutes.js");
 const chatRoutes=require("./routes/chatRoutes.js");
+const imageRoutes =require("./routes/imageRoutes.js");
 
 
 
 
 connectDB();
 
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret:process.env.API_SECRET
+  });
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(fileUpload({
+    useTempFiles: true
+}));
 
 app.use(bodyParser.urlencoded({
     extended: true
@@ -46,6 +60,7 @@ app.use(bodyParser.urlencoded({
   app.use("/mlData",mlDataRoutes);
   app.use("/text",textRoutes);
   app.use("/chat",chatRoutes);
+  app.use("/image",imageRoutes);
   app.use(session({
     secret: process.env.SECRET_KEY_SESSION, 
     resave: false,

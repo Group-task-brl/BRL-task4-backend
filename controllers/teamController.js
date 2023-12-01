@@ -385,7 +385,7 @@ const sendTeamcodeController = async (req, res) => {
     }
   };
 
-  const deleteMemberController = async (req, res) => {
+  const leaderResignController = async (req, res) => {
     try {
       const authorizationHeader = req.headers.authorization;
   
@@ -546,6 +546,57 @@ const sendTeamcodeController = async (req, res) => {
     }
   };
   
+
+  const deleteMemberController = async (req, res) => {
+    try {
+      const authorizationHeader = req.headers.authorization;
+  
+      if (!authorizationHeader) {
+        return res.status(401).json({ error: 'Authorization header missing' });
+      }
+  
+      const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
+      const leaderEmail = decodedToken.email;
+  
+      const { teamId } = req.params;
+      const { memberEmail } = req.body;
+  
+      const team = await Team.findById(teamId);
+  
+      if (!team) {
+        return res.status(404).json({ error: 'Team not found' });
+      }
+  
+      if (team.leaderEmail !== leaderEmail) {
+        return res.status(403).json({ error: 'Only the team leader is allowed to remove members' });
+      }
+  
+      if (memberEmail === leaderEmail) {
+        return res.status(400).json({ error: 'The team leader cannot be removed' });
+      }
+  
+      let isMemberRemoved = false;
+  
+      team.domains.forEach((domain) => {
+        if (domain.members.includes(memberEmail)) {
+         
+          domain.members = domain.members.filter((member) => member !== memberEmail);
+          isMemberRemoved = true;
+        }
+      });
+  
+      if (!isMemberRemoved) {
+        return res.status(400).json({ error: 'Member not found in any domain of the team' });
+      }
+  
+      await team.save();
+  
+      return res.json({ success: true, message: 'Member removed successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
   
 module.exports = {
     createTeamController,
@@ -555,8 +606,8 @@ module.exports = {
     getTeamByCodeController,
     addTaskController,
     taskCompletedController,
-    deleteMemberController,
+    leaderResignController,
     completedTaskController,
     incompleteTaskController,
-
+    deleteMemberController,
 }
