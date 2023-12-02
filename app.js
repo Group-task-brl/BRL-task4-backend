@@ -25,9 +25,7 @@ const mlDataRoutes=require("./routes/mlDataRoutes.js");
 const textRoutes=require("./routes/textRoutes.js");
 const chatRoutes=require("./routes/chatRoutes.js");
 const imageRoutes =require("./routes/imageRoutes.js");
-
-
-
+const leaveRoutes=require("./routes/leaveRoutes.js");
 
 connectDB();
 
@@ -61,6 +59,7 @@ app.use(bodyParser.urlencoded({
   app.use("/text",textRoutes);
   app.use("/chat",chatRoutes);
   app.use("/image",imageRoutes);
+  app.use("/leave",leaveRoutes);
   app.use(session({
     secret: process.env.SECRET_KEY_SESSION, 
     resave: false,
