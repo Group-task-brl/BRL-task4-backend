@@ -55,28 +55,35 @@ const showImageController = async (req, res) => {
     const decodedToken = jwt.verify(authorizationHeader, process.env.SECRET_KEY_JWT);
   
     const email = decodedToken.email;
+
+    
   
-    const { imgName } = req.body;
+    const { imgName } = req.params;
+
+   console.log(email);
+
   
     try {
       const user = await User.findOne({ email: email });
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
+
+      console.log(imgName);
   
       const image = await Image.findOne({ userEmail: email, imgName: imgName });
       if (!image) {
         return res.status(404).json({ error: 'Image not found for the given user and name' });
       }
+
+      console.log(image);
   
-      // Here, you might want to send the image URL or perform any other action based on your use case.
       res.json({ imgURL: image.img, imgName: image.imgName });
     } catch (error) {
       console.error('Error retrieving image:', error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
   };
-  
  
   
   

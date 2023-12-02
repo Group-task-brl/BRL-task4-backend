@@ -8,7 +8,7 @@ const imageController = require('../controllers/imageController');
 
 router.post('/addImage', imageController.addImageController);
 
-router.get('/showImage', imageController.showImageController);
+router.get('/showImage/:imgName', imageController.showImageController);
 
 
 
