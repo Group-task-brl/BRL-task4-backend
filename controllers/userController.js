@@ -233,7 +233,10 @@ async function sendMessage(req,res){
             return res.status(404).json({ error: 'Team not found' });
         }
         
-        const isRecipientMember = team.domains.some(domain => domain.members.includes(Email) || domain.leaderEmail === Email);
+       
+        const isRecipientMember = team.domains.some(
+            domain => domain.members.includes(Email) || team.leaderEmail === Email
+          );
 
         if (!isRecipientMember) {
             return res.status(403).json({ error: 'You can only send mail to team members' });
