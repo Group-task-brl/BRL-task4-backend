@@ -78,3 +78,9 @@ SITE_KEY=your-site-key
 CLOUD_NAME=your-cloud-name
 API_KEY=your-api-key
 API_SECRET=your-api-secret
+
+Make sure to replace the placeholder values with your actual environment variable values. This example provides a starting point for configuring your environment variables.
+
+
+This section explains what environment variables are needed and provides an example `.env` file that users can reference when setting up their own environment.
+
