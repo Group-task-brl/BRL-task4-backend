@@ -59,3 +59,22 @@ HIVE is a Node.js project built using Express and MongoDB. It serves as a platfo
 2. Create or join a team.
 3. Utilize the chat feature for real-time communication.
 4. Explore other functionalities such as machine learning data analysis and text processing.
+
+## Environment Variables
+
+Make sure to set the required environment variables in your `.env` file. Here's an example of what your `.env` file might look like:
+
+```dotenv
+PORT=4000
+MONGODB_URL='mongodb://127.0.0.1:27017/grouptaskdb'
+EMAIL='your-email@example.com'
+PASSWORD='your-email-password'
+URL=http://localhost:4000
+SECRET_KEY_JWT=your-secret-key-for-JWT
+SECRET_KEY_SESSION=your-secret-key-for-session
+TOKEN_HEADER_KEY=your-token-header-key
+SECRET_KEY=your-secret-key
+SITE_KEY=your-site-key
+CLOUD_NAME=your-cloud-name
+API_KEY=your-api-key
+API_SECRET=your-api-secret
