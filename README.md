@@ -22,28 +22,36 @@ HIVE is a Node.js project built using Express and MongoDB. It serves as a platfo
 
 ## Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
 
-git clone https://github.com/Group-task-brl/BRL-task4-backend.git
+```bash
+  git clone https://github.com/Group-task-brl/BRL-task4-backend.git
+```
 
-2. Navigate to the project directory:
+2. **Navigate to the project directory:**
 
-cd BRL-task4-backend
+```bash
+  cd BRL-task4-backend
+```
 
-3. Install dependencies:
+3. **Install dependencies:**
 
-npm install
+ ```bash
+  npm install
+```
 
-4. Set up environment variables by creating a `.env` file and adding the necessary variables. You'll need:
+4. **Set up environment variables by creating a `.env` file and adding the necessary variables. You'll need:**
 - `PORT`: Port number on which the server will run.
 - `MONGODB_URL`: URL for your MongoDB database.
 - `EMAIL`: Email address for sending notifications.
 - `PASSWORD`: Password for the email account.
 - Other necessary environment variables (refer to the example in the README).
 
-5. Start the server:
+5. **Start the server:**
 
-npm start
+  ```bash
+  npm start
+```
 
 ## Usage
 
